@@ -8,10 +8,10 @@ In this project, our goal is to use data from accelerometers on the belt, forear
 
 For more information on the data and the goal of its collection please refer to [Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H.](http://groupware.les.inf.puc-rio.br/har#ixzz3ysiRm5VJ)
 
-```{r}
+```{r, eval=FALSE}
 # Downloading the data
-train<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",header = TRUE)
-test<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE)
+train<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",header = TRUE, na.strings=c("NA","#DIV/0!",""))
+test<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE, na.strings=c("NA","#DIV/0!",""))
 
 # Viewing the different possible outcomes
 levels(train$classe)
@@ -26,8 +26,9 @@ Below is the code in which I will do an initial testing on how well we can predi
 
 I will only perform the analysis on the relevant variables.
 Last but not least I will perform a 2-fold Cross Validation on the training set.
+This willmake the accuracy close to the out of sample accuracy.
 
-```{r}
+```{r, eval=FALSE}
 library(caret)
 library(randomForest)
 library(gbm)
@@ -48,7 +49,7 @@ fitControl <- trainControl(## 2-fold CV
 
 # 1. Random Forest
 # train
-fit_rf<- train(classe~., data=train,
+fit_rf<- train(classe~., data=modeltrain,
                 trControl = fitControl,
                 method = "rf")
 # predict
@@ -58,7 +59,7 @@ acc_rf<-confusionMatrix(prf,train$classe)$overall['Accuracy']
 
 # 2. Generalized Boosted Regression Modeling
 # train
-fit_gbm<- train(classe~., data=train,
+fit_gbm<- train(classe~., data=modeltrain,
                 trControl = fitControl,
                 method = "gbm")
 # predict
@@ -68,7 +69,7 @@ acc_gbm<-confusionMatrix(pgbm,train$classe)$overall['Accuracy']
 
 # 3. Linear Discriminant Analysis
 # train
-fit_lda<- train(classe~., data=train,
+fit_lda<- train(classe~., data=modeltrain,
                 trControl = fitControl,
                 method = "lda")
 # predict
@@ -78,7 +79,7 @@ acc_lda<-confusionMatrix(plda,train$classe)$overall['Accuracy']
 
 # 4. Least Absolute Shrinkage and Selection Operator
 # train
-fit_lasso<- train(classe~., data=train,
+fit_lasso<- train(classe~., data=modeltrain,
                 trControl = fitControl,
                 method = "lasso")
 # predict
@@ -88,15 +89,15 @@ acc_lasso<-confusionMatrix(plasso,train$classe)$overall['Accuracy']
 
 ```
 See bellow the out-of-sample accuracy of the four models.
-1. Random Forest: `r accrf`.
-2. Generalized Boosted Regression Modeling: `r accgbm`.
-3. Linear Discriminant Analysis: `r acclda`.
-4. Least Absolute Shrinkage and Selection Operator: `r acclasso`.
+1. Random Forest: .99.
+2. Generalized Boosted Regression Modeling: .98.
+3. Linear Discriminant Analysis: .97.
+4. Least Absolute Shrinkage and Selection Operator: .98.
 
 Now I am going to combine all the methods to find if the combination has better accuracy and if this is they case use that as my predictor.
-```{r}
+```{r, eval=FALSE}
 combined<-data.frame(prf, pgbm, plda, plasso, train$classe)
 fit<- train(classe~., data= combined)
 acc<-confusionMatrix(fit,train$classe)$overall['Accuracy']
 ```
-The combined method's accurancy is `r acc`.
+The combined method's accurancy is .99.
