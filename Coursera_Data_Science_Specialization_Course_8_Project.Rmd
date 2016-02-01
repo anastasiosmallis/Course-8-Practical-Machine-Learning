@@ -8,7 +8,7 @@ In this project, our goal is to use data from accelerometers on the belt, forear
 
 For more information on the data and the goal of its collection please refer to [Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H.](http://groupware.les.inf.puc-rio.br/har#ixzz3ysiRm5VJ)
 
-```{r}
+```{r, eval=FALSE}
 # Downloading the data
 train<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",header = TRUE)
 test<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", header = TRUE)
@@ -24,8 +24,7 @@ Below is the code in which I will do an initial testing on how well we can predi
 3. Linear Discriminant Analysis
 4. Least Absolute Shrinkage and Selection Operator
 
-I will exclude from the data, the variables "X" (data point id) and "user_name" as they are unrelated to our analysis. And train on all the remaining variables.
-
+I will only perform the analysis on the relevant variables.
 Last but not least I will perform a 2-fold Cross Validation on the training set.
 
 ```{r, eval=FALSE}
@@ -34,10 +33,11 @@ library(randomForest)
 library(gbm)
 library(plyr)
 library(elasticnet)
+library(MASS)
 
-# Removing "X" and "user_name"
-train<-train[,c(-1,-2)]
-test<-test[,c(-1,-2)]
+# Only keep relevant variables
+modeltrain <- train[ , colSums(is.na(train)) == 0]
+modeltrain <- modeltrain[,-c(1:6)]
 
 # Cross Validation
 fitControl <- trainControl(## 2-fold CV
@@ -94,7 +94,9 @@ See bellow the out-of-sample accuracy of the four models.
 4. Least Absolute Shrinkage and Selection Operator: `r acclasso`.
 
 Now I am going to combine all the methods to find if the combination has better accuracy and if this is they case use that as my predictor.
-```{r}
-
+```{r, eval=FALSE}
+combined<-data.frame(prf, pgbm, plda, plasso, train$classe)
+fit<- train(classe~., data= combined)
+acc<-confusionMatrix(fit,train$classe)$overall['Accuracy']
 ```
-The method with the best accuracy is .
+The combined method's accurancy is `r acc`.
